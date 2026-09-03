@@ -30,11 +30,14 @@ const state: AppState = {
   processedKeys: new Set<string>(),
   dailyLimit: 0,
   debug: false,
+  dryRun: false,
+  activeTab: "run",
 };
 
 let config: FilterConfig = loadConfig();
 state.dailyLimit = config.dailyLimit;
 state.debug = config.debug;
+state.dryRun = config.dryRun;
 
 // ──────────────────────────────────────────────
 // 渲染 & 面板
@@ -100,6 +103,7 @@ function onConfigChange(next: FilterConfig): void {
   saveConfig(config);
   state.dailyLimit = config.dailyLimit;
   state.debug = config.debug;
+  state.dryRun = config.dryRun;
 }
 
 function ensureMounted(): void {
@@ -128,6 +132,10 @@ function ensureMounted(): void {
       config = { ...config, fontScale: clamped };
       saveConfig(config);
       render(); // 缩放会改 zoom 和 badge,需要重建
+    },
+    onTabChange: (tab) => {
+      state.activeTab = tab;
+      renderDynamic();
     },
   });
   render = handle.render;

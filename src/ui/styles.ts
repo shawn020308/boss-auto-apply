@@ -488,7 +488,266 @@ export function addStyles(): void {
     background: var(--aj-muted);
   }
 
-  /* 折叠态:只保留头部 */
+  /* ── Tab 导航 ── */
+  #${PANEL_ID} .aj-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--aj-border);
+    margin: 0 -16px 12px;
+  }
+  #${PANEL_ID} .aj-tab {
+    flex: 1;
+    padding: 8px 12px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    color: var(--aj-secondary);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  #${PANEL_ID} .aj-tab:hover {
+    color: var(--aj-text);
+    background: var(--aj-surface);
+  }
+  #${PANEL_ID} .aj-tab[data-active] {
+    color: var(--aj-text);
+    border-bottom-color: var(--aj-accent);
+    font-weight: 600;
+  }
+  #${PANEL_ID} .aj-tab-panel[hidden] {
+    display: none !important;
+  }
+
+  /* ── 预演模式切换 ── */
+  #${PANEL_ID} .aj-dry-run-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    margin: 0 0 10px;
+    border-radius: var(--aj-radius-sm);
+    background: var(--aj-amber-bg);
+    border: 1px solid #ebd9b8;
+    font-size: 12.5px;
+    color: var(--aj-amber);
+    cursor: pointer;
+  }
+  #${PANEL_ID} .aj-dry-run-row input {
+    accent-color: var(--aj-amber);
+    margin: 0;
+  }
+  #${PANEL_ID} .aj-dry-run-row .aj-dry-tag {
+    margin-left: auto;
+    font-size: 10.5px;
+    background: var(--aj-amber);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 8px;
+  }
+
+  /* ── 统计 Tab 布局 ── */
+  #${PANEL_ID} .aj-empty {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--aj-muted);
+  }
+  #${PANEL_ID} .aj-empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+  #${PANEL_ID} .aj-empty-title {
+    font-size: 13px;
+    color: var(--aj-secondary);
+    font-weight: 600;
+  }
+  #${PANEL_ID} .aj-empty-hint {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  #${PANEL_ID} .aj-stats-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  #${PANEL_ID} .aj-stat-tile {
+    border-radius: var(--aj-radius-sm);
+    padding: 10px 4px;
+    background: var(--aj-surface);
+    text-align: center;
+    border: 1px solid var(--aj-border-soft);
+  }
+  #${PANEL_ID} .aj-stat-tile b {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--aj-text);
+    font-variant-numeric: tabular-nums;
+  }
+  #${PANEL_ID} .aj-stat-tile span {
+    display: block;
+    font-size: 11px;
+    color: var(--aj-secondary);
+    margin-top: 1px;
+  }
+  #${PANEL_ID} .aj-stat-tile--applied  b { color: var(--aj-accent); }
+  #${PANEL_ID} .aj-stat-tile--skipped  b { color: var(--aj-amber); }
+  #${PANEL_ID} .aj-stat-tile--failed   b { color: var(--aj-red); }
+  #${PANEL_ID} .aj-stat-tile--dry      b { color: var(--aj-blue); }
+
+  /* ── 图表区块 ── */
+  #${PANEL_ID} .aj-chart-section {
+    margin-bottom: 18px;
+  }
+  #${PANEL_ID} .aj-chart-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--aj-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  #${PANEL_ID} .aj-chart-empty {
+    text-align: center;
+    padding: 16px;
+    color: var(--aj-muted);
+    font-size: 12px;
+    background: var(--aj-surface);
+    border-radius: var(--aj-radius-sm);
+    border: 1px dashed var(--aj-border);
+  }
+
+  /* ── 公司 TOP 横向 bar ── */
+  #${PANEL_ID} .aj-bar-row {
+    display: grid;
+    grid-template-columns: minmax(80px, 35%) 1fr 32px;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+  }
+  #${PANEL_ID} .aj-bar-label {
+    color: var(--aj-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #${PANEL_ID} .aj-bar-track {
+    height: 8px;
+    background: var(--aj-surface);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #${PANEL_ID} .aj-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--aj-accent), var(--aj-accent-hover));
+    border-radius: 4px;
+    transition: width 0.2s ease;
+  }
+  #${PANEL_ID} .aj-bar-count {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--aj-secondary);
+    font-size: 11.5px;
+  }
+
+  /* ── 薪资直方图 ── */
+  #${PANEL_ID} .aj-histogram {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    height: 120px;
+    align-items: end;
+    padding: 8px 0 0;
+  }
+  #${PANEL_ID} .aj-hist-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  #${PANEL_ID} .aj-hist-value {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--aj-secondary);
+    min-height: 14px;
+  }
+  #${PANEL_ID} .aj-hist-bar-track {
+    width: 100%;
+    max-width: 28px;
+    height: 80px;
+    background: var(--aj-surface);
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  #${PANEL_ID} .aj-hist-bar-fill {
+    width: 100%;
+    background: linear-gradient(180deg, var(--aj-accent), var(--aj-accent-hover));
+    border-radius: 4px 4px 0 0;
+    transition: height 0.2s ease;
+    min-height: 2px;
+  }
+  #${PANEL_ID} .aj-hist-label {
+    font-size: 10.5px;
+    color: var(--aj-muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* ── 跳过原因饼图 ── */
+  #${PANEL_ID} .aj-pie-wrap {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+  #${PANEL_ID} .aj-pie {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  #${PANEL_ID} .aj-pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+  }
+  #${PANEL_ID} .aj-pie-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 2px 0;
+  }
+  #${PANEL_ID} .aj-pie-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  #${PANEL_ID} .aj-pie-name {
+    color: var(--aj-text);
+    flex: 1;
+  }
+  #${PANEL_ID} .aj-pie-pct {
+    color: var(--aj-secondary);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+  }
+
+  /* ── 干运行日志前缀色 ── */
+  #${PANEL_ID} .aj-log-info { color: #93b3c4; }
+
+
+    /* 折叠态:只保留头部 */
   #${PANEL_ID}.is-collapsed {
     width: 280px;
   }

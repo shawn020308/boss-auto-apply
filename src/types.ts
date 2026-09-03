@@ -49,6 +49,8 @@ export interface FilterConfig {
   salaryMaxK: number;
   /** 整体 UI 缩放系数(0.7 ~ 1.5),通过 zoom CSS 应用到面板根节点 */
   fontScale: number;
+  /** 预演模式:只扫描+过滤,不实际调用投递接口 */
+  dryRun: boolean;
 }
 
 export const DEFAULT_CONFIG: FilterConfig = {
@@ -73,6 +75,7 @@ export const DEFAULT_CONFIG: FilterConfig = {
   salaryMinK: 0,
   salaryMaxK: 0,
   fontScale: 1.0,
+  dryRun: false,
 };
 
 /** 解析后的职位对象 */
@@ -128,6 +131,10 @@ export interface AppState {
   dailyLimit: number;
   /** 镜像自 config.debug,影响日志输出 */
   debug: boolean;
+  /** 镜像自 config.dryRun,影响面板副标题 */
+  dryRun: boolean;
+  /** 当前激活的 Tab */
+  activeTab: "run" | "stats";
 }
 
 export interface LogEntry {
@@ -137,11 +144,27 @@ export interface LogEntry {
   data?: unknown;
 }
 
-/** 当天投递历史 */
+/** 单次投递/跳过记录(用于统计 Tab) */
+export interface JobRecord {
+  /** 职位唯一键(用于去重 / appliedKeys 同步) */
+  key: string;
+  jobName: string;
+  brandName: string;
+  salaryDesc: string;
+  timestamp: number;
+  outcome: "applied" | "skipped" | "limited" | "failed";
+  /** 仅 outcome=skipped 时有值 */
+  skipReason?: string;
+  /** 预演模式下产生的记录,不计入日上限 */
+  dryRun: boolean;
+}
+
+/** 当天投递历史(供统计 + 去重使用) */
 export interface DayHistory {
   date: string;
   dailyCount: number;
   appliedKeys: string[];
+  records: JobRecord[];
 }
 
 /** 选择器常量(用于从 DOM 抽取职位卡片) */

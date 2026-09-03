@@ -27,6 +27,7 @@ export function normalizeConfig(input: Partial<FilterConfig> | null | undefined)
   merged.salaryMinK = clampInt(merged.salaryMinK, 0, 999, DEFAULT_CONFIG.salaryMinK);
   merged.salaryMaxK = clampInt(merged.salaryMaxK, 0, 999, DEFAULT_CONFIG.salaryMaxK);
   merged.fontScale = clampNumber(merged.fontScale, 0.7, 1.5, DEFAULT_CONFIG.fontScale);
+  merged.dryRun = typeof merged.dryRun === "boolean" ? merged.dryRun : DEFAULT_CONFIG.dryRun;
 
   // delayMaxSec 不能小于 delayMinSec
   if (merged.delayMaxSec < merged.delayMinSec) {

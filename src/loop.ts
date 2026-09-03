@@ -8,7 +8,7 @@ import { applyFilters } from "./filters";
 import { applyJob, fetchJobDetail } from "./api";
 import { getJobCardElements, randomBetween, sleep } from "./dom";
 import { buildJob, formatJob, getJobUniqueKey } from "./job";
-import { hasAppliedToday, loadHistory, recordAppliedKey } from "./history";
+import { hasAppliedToday, loadHistory, recordOutcome } from "./history";
 import { notify } from "./debug";
 
 export type LogFn = (
@@ -108,9 +108,20 @@ async function handleOneJob(job: Job, deps: LoopDeps): Promise<void> {
   state.current = formatJob(job);
   render();
 
+  const recordBase: Omit<import("./types").JobRecord, "outcome" | "skipReason"> = {
+    key,
+    jobName: job.jobName,
+    brandName: job.brandName,
+    salaryDesc: job.salaryDesc,
+    timestamp: Date.now(),
+    dryRun: config.dryRun,
+  };
+
   if (config.skipAppliedHistory && hasAppliedToday(key)) {
     state.skipped += 1;
-    log("warn", `跳过【${formatJob(job)}】:今日历史中已投递`);
+    const reason = "今日历史中已投递";
+    log("warn", `跳过【${formatJob(job)}】:${reason}`);
+    recordOutcome({ ...recordBase, outcome: "skipped", skipReason: reason });
     return;
   }
 
@@ -120,14 +131,23 @@ async function handleOneJob(job: Job, deps: LoopDeps): Promise<void> {
     if (!filter.ok) {
       state.skipped += 1;
       log("warn", `跳过【${formatJob(job)}】:${filter.reason}`);
+      recordOutcome({ ...recordBase, outcome: "skipped", skipReason: filter.reason });
       return;
     }
 
     state.matched += 1;
+
+    // ── 预演模式:不调用投递接口 ──
+    if (config.dryRun) {
+      log("info", `[预演] 会投递【${formatJob(job)}】`);
+      recordOutcome({ ...recordBase, outcome: "applied" });
+      await sleepHumanDelay(config);
+      return;
+    }
+
     const result = await applyJob(job, config.treatChatRemindAsSuccess);
     if (result.ok) {
       state.applied += 1;
-      recordAppliedKey(key);
       if (result.remainingQuota != null && Number.isFinite(result.remainingQuota)) {
         state.platformRemainingQuota = result.remainingQuota;
       }
@@ -140,6 +160,7 @@ async function handleOneJob(job: Job, deps: LoopDeps): Promise<void> {
       } else {
         log("success", `投递成功【${formatJob(job)}】`);
       }
+      recordOutcome({ ...recordBase, outcome: "applied" });
       if (
         result.remainingQuota != null &&
         Number.isFinite(result.remainingQuota) &&
@@ -152,10 +173,12 @@ async function handleOneJob(job: Job, deps: LoopDeps): Promise<void> {
       log("error", `平台限制或需人工处理【${formatJob(job)}】:${result.message}`);
       state.current = result.message || "平台限制";
       state.stopping = true;
+      recordOutcome({ ...recordBase, outcome: "limited", skipReason: result.message });
       return;
     } else {
       state.failed += 1;
       log("error", `投递失败【${formatJob(job)}】:${result.message}`);
+      recordOutcome({ ...recordBase, outcome: "failed", skipReason: result.message });
     }
 
     await sleepHumanDelay(config);
@@ -166,6 +189,7 @@ async function handleOneJob(job: Job, deps: LoopDeps): Promise<void> {
       `处理失败【${formatJob(job)}】:${(error as Error).message || error}`,
       error,
     );
+    recordOutcome({ ...recordBase, outcome: "failed", skipReason: String(error) });
     await sleepHumanDelay(config);
   } finally {
     render();
