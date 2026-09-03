@@ -22,19 +22,48 @@ export interface SalaryRange {
  *   "20K"              → { min: 20, max: 20, known: true }
  *   "面议" / "薪资面议" → { min:  0, max:  0, known: false }
  */
+// 日薪/时薪特征:带"元/天"、"/日"、"元/小时"等
+const DAILY_RATE = /元?\s*[/每]\s*(天|日)/;
+const HOURLY_RATE = /元?\s*[/每]\s*(时|小时)/;
+
+/** 1 个自然月 = 22 工作日,每天 8 小时 */
+const WORK_DAYS_PER_MONTH = 22;
+const WORK_HOURS_PER_DAY = 8;
+
 export function parseSalary(text: string | null | undefined): SalaryRange {
   const normalized = String(text ?? "").trim();
   if (!normalized) return { min: 0, max: 0, known: false };
   if (/面议|协商/.test(normalized)) return { min: 0, max: 0, known: false };
 
-  // 提取所有 "数字 [可选单位]" 段;单位支持 K/k/千/万/w/W
-  // 例如 "10-15K·15薪" → [10K, 15K]
-  //      "1-2万"      → [1万, 2万]   (启发式:含"万"时,无单位数字默认也为万)
-  //      "8千-1.2万"  → [8千, 1.2万] (混合:各自的单位优先)
-  //      "20K"        → [20K]
-  //      "30-50K·15薪" → [30K, 50K]  ("15薪"里的 15 无单位,默认 K,会被截断)
-  // 启发式规则:扫描整个字符串,如果出现 万 / 千 这种"区间级单位",则把所有
-  // 不带显式单位的数字都按这个单位换算;否则无单位数字按 K 处理。
+  // ── 日薪 / 时薪:按 22 工作日/月、8 小时/天 换算成 K/月
+  //    "100-150元/天"   → (100..150) × 22 ÷ 1000  = 2.2K .. 3.3K
+  //    "100元/小时"     → 100 × 8 × 22 ÷ 1000    = 17.6K
+  //    "150-200元/天"   → 3.3K .. 4.4K            ← 之前被错当成 K/月,导致漏过滤
+  if (DAILY_RATE.test(normalized) || HOURLY_RATE.test(normalized)) {
+    const isHourly = HOURLY_RATE.test(normalized);
+    const monthlyFactor = isHourly
+      ? (WORK_HOURS_PER_DAY * WORK_DAYS_PER_MONTH) / 1000
+      : WORK_DAYS_PER_MONTH / 1000;
+    const segments: number[] = [];
+    const regex = /(\d+(?:\.\d+)?)/g;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(normalized)) !== null) {
+      const value = Number(match[1]);
+      if (!Number.isFinite(value)) continue;
+      segments.push(value * monthlyFactor);
+    }
+    if (segments.length === 0) return { min: 0, max: 0, known: false };
+    if (segments.length === 1) return { min: segments[0], max: segments[0], known: true };
+    const min = Math.min(segments[0], segments[1]);
+    const max = Math.max(segments[0], segments[1]);
+    return { min, max, known: true };
+  }
+
+  // ── 月薪模式(K/千/万) —— 启发式:含"万/千"时无单位数字默认同单位
+  //    "10-15K·15薪" → [10K, 15K]
+  //    "1-2万"       → [1万, 2万]
+  //    "8千-1.2万"   → [8千, 1.2万] (混合:各自单位优先)
+  //    "20K"         → [20K]
   const globalUnit = pickGlobalUnit(normalized);
 
   const segments: number[] = [];
