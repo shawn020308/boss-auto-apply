@@ -485,6 +485,17 @@ export function addStyles(): void {
     border-radius: 3px;
   }
   /* ── 聊天页注入的"查企"链接(Boss chat 列表里,不在 panel 内) ── */
+  /* 默认隐藏 + 不可点击,hover 时从右侧滑入 */
+  .aj-qcc-link {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease !important;
+  }
+  .aj-qcc-host:hover > .aj-qcc-link {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) translateX(0) !important;
+  }
   .aj-qcc-link:hover {
     background: #d97757 !important;
     color: #ffffff !important;
