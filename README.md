@@ -1,56 +1,79 @@
-# Boss 直聘自动投递油猴脚本 (极简轻量版)
+# Boss 直聘自动投递油猴脚本
 
-这是一个专为 Boss 直聘职位列表页设计的 Tampermonkey/篡改猴自动投递脚本。专注于**真实投递与安全防风控**，去除了繁琐的配置，只保留最核心的岗位详情筛选。
+专为 Boss 直聘职位列表页设计的 Tampermonkey / 篡改猴自动投递脚本。专注于**真实投递与安全防风控**,去除了繁琐的配置,只保留最核心的岗位详情筛选。
 
-## 文件说明
+> v0.2 起使用 **TypeScript + Vite + vite-plugin-monkey** 构建,源码拆分到 `src/`,构建产物为单文件 `dist/boss-auto-apply.user.js`。
 
-- `boss-auto-apply.user.js`：可直接安装到 Tampermonkey 的用户脚本。
-- `package.json`：仅用于本地代码语法检查。
+## 鸣谢 🙏
+
+本项目是 [muyuniao/boss-auto-apply](https://github.com/muyuniao/boss-auto-apply) 的 fork。原作者把核心逻辑写得非常扎实 —— 投递 API 调用、Vue 反射取值、过滤规则、风控默认参数都开箱即用,脚本本身就很好用。
+
+本 fork 只在原版基础上做了两件事:
+
+- **UI 重做**:按 Claude 风格重画面板(配色 / 字号 / 缩放 / 可折叠分组)
+- **新增薪资过滤**:解析 `10-15K·15薪` / `1-2万` / `面议` 等格式,支持上下限区间过滤
+
+其余逻辑(投递、详情接口、风控默认值、长尾暂停等)都是原作者的设计,**插件非常好用,推荐优先使用原作者版本**。本 fork 主要面向想在原作者基础上做 UI 调整或想加薪资过滤的同学。
+
 
 ## 安装与使用
 
 1. 在浏览器中安装 **Tampermonkey / 篡改猴** 插件。
-2. (推荐方式) 访问 [Greasy Fork 脚本安装页面](https://greasyfork.org/zh-CN/scripts/585275-boss%E7%9B%B4%E8%81%98%E8%87%AA%E5%8A%A8%E6%8A%95%E9%80%92%E5%8A%A9%E6%89%8B) 一键安装/更新。也可以选择复制本仓库的 `boss-auto-apply.user.js` 全部代码并在 Tampermonkey 中手动新建保存。
+2. 取 `dist/boss-auto-apply.user.js` 拖进 Tampermonkey 安装,或复制全部内容手动新建脚本。
 3. 自行登录 Boss 直聘网页版。
-4. 打开 Boss 直聘职位页面，例如：
-   - `https://www.zhipin.com/web/geek/job` （搜索结果页）
-   - `https://www.zhipin.com/web/geek/job-recommend` （推荐职位页）
-5. 页面右下角将自动挂载「Boss 自动投递助手」控制面板。
-6. 根据需要设置 **岗位详情包含/排除关键词**，点击 **「开始」** 即可自动开始后台投递。
+4. 打开职位列表页(例如 `https://www.zhipin.com/web/geek/job`)。
+5. 右下角自动挂载「Boss 自动投递助手」面板,设置好筛选条件后点击「开始」。
 
-## 核心设计与特性
+## 开发
 
-- **无感自动保存**：移除了手动的“保存”按钮。面板上对复选框和关键词输入框的任何改动，都会在后台自动、实时、无感地保存，不丢失输入焦点。
-- **固定的安全等待**：
-  - **投递间隔**：自动锁定在 **4秒 至 10秒 之间随机等待**，模拟真人操作规避风控。
-  - **翻页等待**：固定锁定为 **3秒** 自动翻页或滚动。
-- **每日防封阈值**：每日最大投递额度固定锁死在 **150 份**。一旦今天投递达到 150 份，脚本会安全终止并提示“已达每日上限”。
-- **BOSS 活跃度过滤**：固定只投递 **两周内活跃** 的 BOSS。当 BOSS 活跃时间超过 14 天，自动跳过投递并提示 `boss活跃度未达标,已过滤`。
-- **极简化筛选机制**：
-  - 移除了职位名称包含/排除、公司名称包含/排除和薪资上下限等繁琐选项，只保留了最实用的**岗位详情描述关键词**过滤。
-  - 移除了试运行和数据检测等繁琐调试工具，直接面向真实投递，点击「开始」即刻行动。
-- **二次确认智能记录**：对 Boss 直聘常见的 `开聊提醒` (二级确认) 默认按投递成功记录。
+```bash
+npm install        # 安装依赖
+npm run dev        # 开发模式(监听变更 + 出包)
+npm run build      # 生产构建 → dist/boss-auto-apply.user.js
+npm run check      # 仅做 TypeScript 类型检查
+```
+
+## 核心特性
+
+- **无感自动保存**:面板上任何改动即时保存,不丢焦点。
+- **安全默认**:`skipHeadhunter`、`treatChatRemindAsSuccess`、`fetchDetail`、`skipAppliedHistory` 默认开启。
+- **可调防封参数**(面板上直接设置,不再硬锁):
+  - `dailyLimit` —— 每日投递上限
+  - `delayMinSec` / `delayMaxSec` —— 单次投递间隔区间(秒)
+  - `pageDelaySec` —— 翻页/滚动后等待
+  - `longPauseChance` —— **长尾暂停概率**(默认 15%):每次投递按此概率触发一次 12–25s 的"长暂停",模拟真人"看完 JD 再投"节奏,降低被风控识别的概率
+  - `activeWithinDays` —— BOSS 活跃天数阈值
+- **新增薪资过滤**:
+  - `salaryMinK` / `salaryMaxK` —— 区间过滤(以 K 为单位,0 = 不限)
+  - 自动解析 `10-15K·15薪` / `1-2万` / `8千-1.2万` / `面议` 等格式
+  - `面议` 在设置了过滤区间时默认跳过(保守策略)
+- **固定 150 份每日上限** 的硬锁已**移除**,现在由用户在面板上控制(默认仍是 150)。
+
+## 源码结构
+
+```
+src/
+├── globals.d.ts          GM_* API 类型声明
+├── main.ts               入口/bootstrap
+├── types.ts              全局类型 + DEFAULT_CONFIG
+├── config.ts             配置加载/规范化
+├── gm.ts                 GM 存储封装 + 请求头
+├── history.ts            当天投递历史(去重/计数)
+├── debug.ts              日志/通知
+├── dom.ts                文本工具/选择器/Vue 反射取值
+├── job.ts                卡片解析/唯一键/活跃天数
+├── salary.ts             ⭐ 薪资解析
+├── filters.ts            过滤规则组合
+├── api.ts                fetch 详情 + 投递接口
+├── loop.ts               主循环/翻页/启停
+├── route.ts              SPA 路由监听
+└── ui/
+    ├── styles.ts         CSS
+    └── panel.ts          面板渲染 + 事件
+```
 
 ## 注意事项
 
-- 自动投递使用的是您当前浏览器登录的 Boss 页面原生接口，脚本**绝不**收集或上传您的个人数据或密码。
-- 脚本不会突破、绕过 Boss 官方的滑块验证码或账号风控。如果弹出验证码，请手动完成即可。
-- 如果提示“今日沟通上限”或触发风控，脚本会自动结束。建议合理规划每日投递。
-
-## 本地代码检查 (开发者)
-
-如果您本机安装了 Node.js：
-
-```bash
-npm run check
-```
-
-该命令仅用于做 JavaScript 代码的 AST 语法检查，确保无语法错误。
-
----
-
-## 📸 运行效果截图
-
-| 页面整体效果 | 操作控制面板 |
-| :---: | :---: |
-| ![页面整体效果](https://github.com/muyuniao/boss-auto-apply/raw/main/images/screenshot1.png) | ![操作控制面板](https://github.com/muyuniao/boss-auto-apply/raw/main/images/screenshot2.png) |
+- 自动投递使用的是您当前浏览器登录的 Boss 页面原生接口,脚本**绝不**收集或上传您的个人数据或密码。
+- 脚本不会突破、绕过 Boss 官方的滑块验证码或账号风控。触发风控请降低 `dailyLimit` 并调大 `delayMinSec` / `delayMaxSec`。
+- 如果提示"今日沟通上限"或触发风控,脚本会自动结束。
