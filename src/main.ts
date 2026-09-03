@@ -5,7 +5,8 @@
 import { AppState, FilterConfig } from "./types";
 import { loadConfig, saveConfig } from "./config";
 import { getCookie } from "./gm";
-import { isBossJobPage } from "./dom";
+import { isBossJobPage, isBossChatPage } from "./dom";
+import { startChatPage } from "./chat";
 import { createLogSink } from "./debug";
 import { mountPanel, PanelModel } from "./ui/panel";
 import { runApplyLoop, resetRunCounters, onLoopFinished } from "./loop";
@@ -145,13 +146,25 @@ function ensureMounted(): void {
 }
 
 function bootstrap(): void {
-  if (!isBossJobPage()) return;
-  ensureMounted();
+  // 职位列表页 → 投递面板
+  if (isBossJobPage()) {
+    ensureMounted();
+    installRouteWatcher(() => {
+      if (isBossJobPage()) ensureMounted();
+    });
+    registerMenu();
+    log("success", "脚本已加载。");
+    return;
+  }
+  // 聊天页 → 注入企查查链接
+  if (isBossChatPage()) {
+    startChatPage();
+    return;
+  }
+}
 
-  installRouteWatcher(() => {
-    if (isBossJobPage()) ensureMounted();
-  });
-
+function registerMenu(): void {
+  if (typeof isBossJobPage !== "function" || !isBossJobPage()) return;
   try {
     if (typeof GM_registerMenuCommand === "function") {
       GM_registerMenuCommand("显示/隐藏 Boss 自动投递面板", () => {
@@ -164,8 +177,6 @@ function bootstrap(): void {
   } catch (error) {
     console.warn("[boss-auto-apply-lite] register menu failed", error);
   }
-
-  log("success", "脚本已加载。");
 }
 
 if (document.readyState === "loading") {

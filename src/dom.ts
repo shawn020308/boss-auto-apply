@@ -19,6 +19,10 @@ export function isBossJobPage(): boolean {
   );
 }
 
+export function isBossChatPage(): boolean {
+  return /https:\/\/www\.zhipin\.com\/web\/geek\/chat/.test(location.href);
+}
+
 export function normalizeText(value: unknown): string {
   return String(value ?? "")
     .replace(/\s+/g, " ")

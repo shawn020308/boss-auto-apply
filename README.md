@@ -88,3 +88,13 @@ Claude 风格面板(本 fork 重做版):
 ![Boss 自动投递助手面板](images/panel.png)
 
 运行中:5 项统计实时更新,日志区滚动显示每条操作。
+
+## 💬 聊天页查企业
+
+脚本在 `https://www.zhipin.com/web/geek/chat` 页面会在每条聊天项末尾注入一个 **查企** 链接,点击在新标签页打开:
+
+```
+https://www.qcc.com/web/search?key={公司名}
+```
+
+便于在正式沟通前查看企业工商信息、风险、司法记录等。无需任何配置。

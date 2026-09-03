@@ -17,6 +17,7 @@ export default defineConfig({
           "https://www.zhipin.com/web/geek/jobs*",
           "https://www.zhipin.com/web/geek/job-recommend*",
           "https://www.zhipin.com/web/geek/overseas*",
+          "https://www.zhipin.com/web/geek/chat*",
         ],
         grant: [
           "GM_getValue",

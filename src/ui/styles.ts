@@ -484,6 +484,13 @@ export function addStyles(): void {
     background: var(--aj-border);
     border-radius: 3px;
   }
+  /* ── 聊天页注入的"查企"链接(Boss chat 列表里,不在 panel 内) ── */
+  .aj-qcc-link:hover {
+    background: #d97757 !important;
+    color: #ffffff !important;
+    border-color: #d97757 !important;
+  }
+
   #${PANEL_ID} ::-webkit-scrollbar-thumb:hover {
     background: var(--aj-muted);
   }
@@ -764,3 +771,4 @@ export function addStyles(): void {
 }
 
 export const PANEL_SELECTOR = `#${PANEL_ID}`;
+
