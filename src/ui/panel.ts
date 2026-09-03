@@ -160,6 +160,18 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
               <textarea name="excludeDescriptionKeywords" placeholder="外包, 销售">${htmlEscape(config.excludeDescriptionKeywords)}</textarea>
             </div>
           </details>
+
+          <details class="aj-details" data-details="blockCity">
+            <summary>
+              <span>屏蔽地域</span>
+              <span class="aj-summary-hint" data-bind="block-city-hint">${describeBlockCities(config)}</span>
+              <span class="aj-chevron">▸</span>
+            </summary>
+            <div>
+              <label style="font-size:11.5px;color:var(--aj-secondary);margin-bottom:4px;display:block">城市关键词(子串匹配 cityName,逗号/换行分隔)</label>
+              <textarea name="blockCityKeywords" placeholder="杭州, 北京, 郑州">${htmlEscape(config.blockCityKeywords)}</textarea>
+            </div>
+          </details>
         </form>
       </div>
 
@@ -314,6 +326,8 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
     if (salaryHint) salaryHint.textContent = describeSalary(config);
     const kwHint = panel.querySelector<HTMLElement>('[data-bind="keyword-hint"]');
     if (kwHint) kwHint.textContent = describeKeywords(config);
+    const cityHint = panel.querySelector<HTMLElement>('[data-bind="block-city-hint"]');
+    if (cityHint) cityHint.textContent = describeBlockCities(config);
   };
 
   panel.addEventListener("click", onFormChange);
@@ -356,6 +370,13 @@ function describeKeywords(c: FilterConfig): string {
   if (inc) parts.push(`含 ${count(inc)}`);
   if (exc) parts.push(`排除 ${count(exc)}`);
   return parts.join(" · ");
+}
+
+function describeBlockCities(c: FilterConfig): string {
+  const raw = (c.blockCityKeywords || "").trim();
+  if (!raw) return "不限";
+  const count = raw.split(/[，,\n;]/).filter(Boolean).length;
+  return `${count} 个城市`;
 }
 
 function collectFormConfig(panel: HTMLElement): FilterConfig {

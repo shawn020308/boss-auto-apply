@@ -45,7 +45,7 @@ export function renderStatsTab(history: DayHistory): string {
 
     <!-- 公司 TOP -->
     <div class="aj-chart-section">
-      <div class="aj-chart-title">投递公司 TOP ${companies.length}</div>
+      <div class="aj-chart-title">投递公司 TOP 6</div>
       ${renderCompanies(companies)}
     </div>
 

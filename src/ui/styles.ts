@@ -535,6 +535,16 @@ export function addStyles(): void {
     border-bottom-color: var(--aj-accent);
     font-weight: 600;
   }
+  /* 内容区左右上下 padding(注意:.aj-body 不再被使用,
+     所有内容都在 .aj-tab-panel 里) */
+  #${PANEL_ID} .aj-tab-panel {
+    padding: 12px 16px 16px;
+    /* 让 tab 内容超出视窗时可上下滚动;
+       min-height:0 是 flex 子项要滚动的必要条件 */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
   #${PANEL_ID} .aj-tab-panel[hidden] {
     display: none !important;
   }

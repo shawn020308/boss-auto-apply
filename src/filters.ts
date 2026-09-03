@@ -29,6 +29,15 @@ export function applyFilters(
     return { ok: false, reason: "今日历史中已投递" };
   }
 
+  // 地域黑名单(纯列表数据,无须详情接口;子串匹配 cityName)
+  const blockList = splitKeywords(config.blockCityKeywords);
+  if (blockList.length && job.cityName) {
+    const cityLower = normalizeText(job.cityName).toLowerCase();
+    if (blockList.some((kw) => cityLower.includes(kw))) {
+      return { ok: false, reason: `屏蔽地域命中:${job.cityName}` };
+    }
+  }
+
   if (
     config.skipHeadhunter &&
     (job.goldHunter === 1 || job.goldHunter === "1" || /猎头/.test(job.rawText))

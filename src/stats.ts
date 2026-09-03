@@ -40,6 +40,7 @@ const REASON_CATEGORIES: Array<{ category: string; match: RegExp }> = [
   { category: "已沟通过", match: /沟通|沟通过|friendStatus/ },
   { category: "猎头", match: /猎头/ },
   { category: "数据缺失", match: /缺少|securityId|lid/ },
+  { category: "地域", match: /屏蔽地域/ },
 ];
 
 export function categorizeReason(reason: string): string {
@@ -100,13 +101,13 @@ export function salaryDistribution(records: JobRecord[]): SalaryBucket[] {
       buckets[buckets.length - 1].count += 1;
       continue;
     }
-    // 用 max 落入区间
-    const max = range.max;
-    if (max < 5) buckets[0].count += 1;
-    else if (max < 10) buckets[1].count += 1;
-    else if (max < 15) buckets[2].count += 1;
-    else if (max < 20) buckets[3].count += 1;
-    else if (max < 30) buckets[4].count += 1;
+    // 用 min 落入区间 —— boss 区间普遍虚高,按最低取更接近实际
+    const min = range.min;
+    if (min < 5) buckets[0].count += 1;
+    else if (min < 10) buckets[1].count += 1;
+    else if (min < 15) buckets[2].count += 1;
+    else if (min < 20) buckets[3].count += 1;
+    else if (min < 30) buckets[4].count += 1;
     else buckets[5].count += 1;
   }
   return buckets;
@@ -142,7 +143,7 @@ export function computeStats(history: DayHistory): {
   const records = history.records || [];
   return {
     summary: summarize(records),
-    companies: topCompanies(records),
+    companies: topCompanies(records, 6),
     salaries: salaryDistribution(records),
     reasons: skipReasonDistribution(records),
   };

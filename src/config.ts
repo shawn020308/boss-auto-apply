@@ -44,6 +44,7 @@ export function normalizeConfig(input: Partial<FilterConfig> | null | undefined)
   // 字符串字段兜底
   merged.includeDescriptionKeywords = String(merged.includeDescriptionKeywords || "");
   merged.excludeDescriptionKeywords = String(merged.excludeDescriptionKeywords || "");
+  merged.blockCityKeywords = String(merged.blockCityKeywords || "");
 
   return merged;
 }
