@@ -9,7 +9,7 @@ import { htmlEscape } from "../dom";
 /** 饼图分类对应颜色(暖色调,跟主题一致) */
 const PIE_COLORS = ["#d97757", "#5b8db8", "#c08a45", "#6a9b71", "#8b7bab", "#cc5a4a", "#bfbab3"];
 
-export function renderStatsTab(history: DayHistory): string {
+export function renderStatsTab(history: DayHistory, disabled = false): string {
   const { summary, companies, salaries, reasons } = computeStats(history);
 
   if (summary.totalRecords === 0) {
@@ -23,6 +23,11 @@ export function renderStatsTab(history: DayHistory): string {
   }
 
   return `
+    <!-- 工具栏 -->
+    <div class="aj-stats-toolbar">
+      <button class="aj-btn aj-btn-ghost aj-btn-sm" data-action="clear-stats" ${disabled ? "disabled" : ""} title="清除统计记录 + 重置内存计数;不影响今日已投递计数">重置统计</button>
+    </div>
+
     <!-- 概况 -->
     <div class="aj-stats-summary">
       <div class="aj-stat-tile aj-stat-tile--applied">

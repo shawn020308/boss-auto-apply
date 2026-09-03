@@ -11,7 +11,7 @@ import { createLogSink } from "./debug";
 import { mountPanel, PanelModel } from "./ui/panel";
 import { runApplyLoop, resetRunCounters, onLoopFinished } from "./loop";
 import { installRouteWatcher } from "./route";
-import { loadHistory } from "./history";
+import { loadHistory, clearStatsRecords } from "./history";
 
 // ──────────────────────────────────────────────
 // 应用状态
@@ -136,6 +136,12 @@ function ensureMounted(): void {
     },
     onTabChange: (tab) => {
       state.activeTab = tab;
+      renderDynamic();
+    },
+    onClearStats: () => {
+      clearStatsRecords();
+      resetRunCounters(state);
+      log("success", "已清除统计记录并重置内存计数");
       renderDynamic();
     },
   });

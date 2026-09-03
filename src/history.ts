@@ -66,6 +66,16 @@ export function recordAppliedKey(key: string): void {
   saveHistory(history);
 }
 
+/**
+ * 清除统计记录(只清 records,不动 appliedKeys/dailyCount —— 否则脚本会重新投递已投过的职位)。
+ * 调用方还需要自己重置内存计数(state.scanned/matched/...)以同步显示。
+ */
+export function clearStatsRecords(): void {
+  const history = loadHistory();
+  history.records = [];
+  saveHistory(history);
+}
+
 export function hasAppliedToday(key: string): boolean {
   const history = loadHistory();
   return history.appliedKeys.includes(key);

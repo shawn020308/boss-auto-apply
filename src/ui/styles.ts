@@ -414,6 +414,28 @@ export function addStyles(): void {
     background: var(--aj-red-bg);
     border-color: var(--aj-red);
   }
+  /* 小号幽灵按钮(用于工具栏次要动作,如统计重置) */
+  #${PANEL_ID} .aj-btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  #${PANEL_ID} .aj-btn-ghost {
+    background: transparent;
+    color: var(--aj-secondary);
+    border-color: var(--aj-border-soft);
+  }
+  #${PANEL_ID} .aj-btn-ghost:hover:not(:disabled) {
+    background: var(--aj-surface);
+    color: var(--aj-text);
+    border-color: var(--aj-border);
+  }
+  /* 统计 tab 工具栏(右对齐的次要动作按钮行) */
+  #${PANEL_ID} .aj-stats-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
 
   /* 缩放按钮组(头部) */
   #${PANEL_ID} .aj-scale-group {

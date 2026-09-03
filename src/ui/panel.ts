@@ -25,6 +25,7 @@ export interface PanelCallbacks {
   onConfigChange: (config: FilterConfig) => void;
   onFontScaleChange: (delta: number) => void;
   onTabChange: (tab: TabId) => void;
+  onClearStats: () => void;
 }
 
 export interface PanelModel {
@@ -177,7 +178,7 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
 
       <!-- 统计 Tab -->
       <div class="aj-tab-panel" data-tab-panel="stats" ${activeTab === "stats" ? "" : "hidden"} data-bind="stats">
-        ${renderStatsTab(history)}
+        ${renderStatsTab(history, state.running)}
       </div>
     `;
 
@@ -208,7 +209,7 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
     // 统计 tab:有数据变化才重渲染
     if (activeTab === "stats") {
       const statsEl = panel.querySelector<HTMLElement>('[data-bind="stats"]');
-      if (statsEl) statsEl.innerHTML = renderStatsTab(loadHistory());
+      if (statsEl) statsEl.innerHTML = renderStatsTab(loadHistory(), state.running);
     }
 
     // 统计 5 项
@@ -294,6 +295,13 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
         break;
       case "scale-reset":
         cb.onFontScaleChange(0);
+        break;
+      case "clear-stats":
+        if (typeof window.confirm === "function" &&
+            !window.confirm("确定清除所有统计记录并重置计数?\n\n不会影响今日已投递计数和已投记录(appliedKeys),脚本不会重复投递已投过的职位。")) {
+          return;
+        }
+        cb.onClearStats();
         break;
     }
   });
