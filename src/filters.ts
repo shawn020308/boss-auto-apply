@@ -29,12 +29,24 @@ export function applyFilters(
     return { ok: false, reason: "今日历史中已投递" };
   }
 
-  // 地域黑名单(纯列表数据,无须详情接口;子串匹配 cityName)
+  // 地域黑名单(纯列表数据,无须详情接口;子串匹配 cityName;高薪可豁免)
   const blockList = splitKeywords(config.blockCityKeywords);
   if (blockList.length && job.cityName) {
     const cityLower = normalizeText(job.cityName).toLowerCase();
     if (blockList.some((kw) => cityLower.includes(kw))) {
-      return { ok: false, reason: `屏蔽地域命中:${job.cityName}` };
+      const exemptMinK = config.cityExemptMinSalaryK || 0;
+      if (exemptMinK > 0) {
+        const range = extractSalaryRange(detail?.salaryDesc, job.salaryDesc);
+        if (!range.known) {
+          return { ok: false, reason: `屏蔽地域命中:${job.cityName}(薪资未知,无法豁免)` };
+        }
+        if (range.min < exemptMinK) {
+          return { ok: false, reason: `屏蔽地域命中:${job.cityName}(薪资下限 ${range.min}K 未达豁免 ${exemptMinK}K)` };
+        }
+        // 高薪豁免通过,不屏蔽
+      } else {
+        return { ok: false, reason: `屏蔽地域命中:${job.cityName}` };
+      }
     }
   }
 

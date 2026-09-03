@@ -45,6 +45,8 @@ export interface FilterConfig {
   excludeDescriptionKeywords: string;
   /** 屏蔽地域关键词(逗号/换行/分号分隔,子串匹配 cityName) */
   blockCityKeywords: string;
+  /** 高薪豁免地域屏蔽:岗位最低薪资 ≥ 此值(K)时不屏蔽,0 = 关闭 */
+  cityExemptMinSalaryK: number;
   /** 薪资下限(K),0 = 不限 */
   salaryMinK: number;
   /** 薪资上限(K),0 = 不限 */
@@ -75,6 +77,7 @@ export const DEFAULT_CONFIG: FilterConfig = {
   includeDescriptionKeywords: "",
   excludeDescriptionKeywords: "",
   blockCityKeywords: "",
+  cityExemptMinSalaryK: 0,
   salaryMinK: 0,
   salaryMaxK: 0,
   fontScale: 1.0,

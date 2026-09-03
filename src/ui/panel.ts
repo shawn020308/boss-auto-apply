@@ -172,6 +172,9 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
               <label style="font-size:11.5px;color:var(--aj-secondary);margin-bottom:4px;display:block">城市关键词(子串匹配 cityName,逗号/换行分隔)</label>
               <textarea name="blockCityKeywords" placeholder="杭州, 北京, 郑州">${htmlEscape(config.blockCityKeywords)}</textarea>
             </div>
+            <div class="aj-numbers" style="margin-top:10px">
+              ${num("cityExemptMinSalaryK", "高薪豁免", "K (0=关闭)", config.cityExemptMinSalaryK)}
+            </div>
           </details>
         </form>
       </div>
@@ -382,9 +385,15 @@ function describeKeywords(c: FilterConfig): string {
 
 function describeBlockCities(c: FilterConfig): string {
   const raw = (c.blockCityKeywords || "").trim();
-  if (!raw) return "不限";
-  const count = raw.split(/[，,\n;]/).filter(Boolean).length;
-  return `${count} 个城市`;
+  const exempt = c.cityExemptMinSalaryK || 0;
+  const parts: string[] = [];
+  if (raw) {
+    const count = raw.split(/[，,\n;]/).filter(Boolean).length;
+    parts.push(`${count} 个城市`);
+  }
+  if (exempt > 0) parts.push(`高薪 ≥${exempt}K 豁免`);
+  if (parts.length === 0) return "不限";
+  return parts.join(" · ");
 }
 
 function collectFormConfig(panel: HTMLElement): FilterConfig {

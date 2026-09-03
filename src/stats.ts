@@ -34,7 +34,7 @@ export interface StatsSummary {
 
 /** 跳过原因归类(把 filters/loop 散落的 reason 字符串归到 7 大类) */
 const REASON_CATEGORIES: Array<{ category: string; match: RegExp }> = [
-  { category: "关键词", match: /包含关键词|命中排除关键词/ },
+  { category: "关键词", match: /关键词/ },
   { category: "薪资", match: /薪资/ },
   { category: "BOSS 活跃度", match: /活跃|在线/ },
   { category: "已沟通过", match: /沟通|沟通过|friendStatus/ },
