@@ -2,7 +2,7 @@
 // stats.ts - 统计 Tab 数据聚合
 // ============================================================
 
-import { DayHistory, JobRecord } from "./types";
+import { AllHistory, JobRecord } from "./types";
 import { parseSalary } from "./salary";
 
 export interface CompanyCount {
@@ -133,14 +133,19 @@ export function skipReasonDistribution(records: JobRecord[]): ReasonCount[] {
     .sort((a, b) => b.count - a.count);
 }
 
-/** 综合入口:从 history 一次性算出所有统计 */
-export function computeStats(history: DayHistory): {
+/** 综合入口:从 history 一次性算出所有统计(跨天聚合) */
+export function computeStats(history: AllHistory): {
   summary: StatsSummary;
   companies: CompanyCount[];
   salaries: SalaryBucket[];
   reasons: ReasonCount[];
 } {
-  const records = history.records || [];
+  const records: JobRecord[] = [];
+  for (const day of history.days) {
+    if (Array.isArray(day.records)) {
+      for (const r of day.records) records.push(r);
+    }
+  }
   return {
     summary: summarize(records),
     companies: topCompanies(records, 6),

@@ -10,7 +10,7 @@ import {
   VERSION,
 } from "../types";
 import { htmlEscape } from "../dom";
-import { loadHistory } from "../history";
+import { loadHistory, loadAllHistory } from "../history";
 import { normalizeConfig } from "../config";
 import { addStyles } from "./styles";
 import { renderStatsTab } from "./stats";
@@ -181,7 +181,7 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
 
       <!-- 统计 Tab -->
       <div class="aj-tab-panel" data-tab-panel="stats" ${activeTab === "stats" ? "" : "hidden"} data-bind="stats">
-        ${renderStatsTab(history, state.running)}
+        ${renderStatsTab(loadAllHistory(), state.running)}
       </div>
     `;
 
@@ -209,10 +209,10 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
       else b.removeAttribute("data-active");
     });
 
-    // 统计 tab:有数据变化才重渲染
+    // 统计 tab:有数据变化才重渲染(跨天聚合)
     if (activeTab === "stats") {
       const statsEl = panel.querySelector<HTMLElement>('[data-bind="stats"]');
-      if (statsEl) statsEl.innerHTML = renderStatsTab(loadHistory(), state.running);
+      if (statsEl) statsEl.innerHTML = renderStatsTab(loadAllHistory(), state.running);
     }
 
     // 统计 5 项

@@ -430,11 +430,16 @@ export function addStyles(): void {
     color: var(--aj-text);
     border-color: var(--aj-border);
   }
-  /* 统计 tab 工具栏(右对齐的次要动作按钮行) */
+  /* 统计 tab 工具栏:左侧元信息 + 右侧次要按钮 */
   #${PANEL_ID} .aj-stats-toolbar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 8px;
+  }
+  #${PANEL_ID} .aj-stats-meta {
+    color: var(--aj-secondary);
+    font-size: 12px;
   }
 
   /* 缩放按钮组(头部) */

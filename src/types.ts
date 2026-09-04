@@ -165,12 +165,26 @@ export interface JobRecord {
   dryRun: boolean;
 }
 
-/** 当天投递历史(供统计 + 去重使用) */
+/** 单天投递历史(供统计 + 去重使用) */
 export interface DayHistory {
   date: string;
+  /** 今日已投递(applied + 非 dryRun)条数,用于 dailyLimit 判定 */
   dailyCount: number;
+  /** 今日已投递的职位 key 集合,用于跨 session 去重 */
   appliedKeys: string[];
+  /** 今日所有 JobRecord(预演也保留) */
   records: JobRecord[];
+}
+
+/**
+ * 全部历史(按天分桶,跨天保留)。
+ * - dailyLimit 仍只看当天 bucket
+ * - 统计 Tab 聚合 days[*].records
+ * - 老结构({date,...})在 history.ts 加载时一次性迁移进来,数据不丢
+ */
+export interface AllHistory {
+  version: 2;
+  days: DayHistory[];
 }
 
 /** 选择器常量(用于从 DOM 抽取职位卡片) */

@@ -3,14 +3,15 @@
 // ============================================================
 
 import { computeStats } from "../stats";
-import { DayHistory } from "../types";
+import { AllHistory } from "../types";
 import { htmlEscape } from "../dom";
 
 /** 饼图分类对应颜色(暖色调,跟主题一致) */
 const PIE_COLORS = ["#d97757", "#5b8db8", "#c08a45", "#6a9b71", "#8b7bab", "#cc5a4a", "#bfbab3"];
 
-export function renderStatsTab(history: DayHistory, disabled = false): string {
+export function renderStatsTab(history: AllHistory, disabled = false): string {
   const { summary, companies, salaries, reasons } = computeStats(history);
+  const daysCovered = history.days.filter((d) => d.records.length > 0).length;
 
   if (summary.totalRecords === 0) {
     return `
@@ -25,7 +26,8 @@ export function renderStatsTab(history: DayHistory, disabled = false): string {
   return `
     <!-- 工具栏 -->
     <div class="aj-stats-toolbar">
-      <button class="aj-btn aj-btn-ghost aj-btn-sm" data-action="clear-stats" ${disabled ? "disabled" : ""} title="清除统计记录 + 重置内存计数;不影响今日已投递计数">重置统计</button>
+      <span class="aj-stats-meta">累计 ${summary.totalRecords} 条 · 覆盖 ${daysCovered} 天</span>
+      <button class="aj-btn aj-btn-ghost aj-btn-sm" data-action="clear-stats" ${disabled ? "disabled" : ""} title="清除所有统计记录 + 重置内存计数;不影响各日已投递计数">重置统计</button>
     </div>
 
     <!-- 概况 -->
