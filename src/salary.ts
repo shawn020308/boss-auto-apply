@@ -20,11 +20,16 @@ export interface SalaryRange {
  *   "1-2万"            → { min: 10, max: 20, known: true }
  *   "8千-1.2万"        → { min:  8, max: 12, known: true }
  *   "20K"              → { min: 20, max: 20, known: true }
+ *   "100-150元/天"     → { min: 2.2, max: 3.3, known: true }   ← ×22÷1000
+ *   "2000-4000元/月"   → { min:  2,  max:  4,  known: true }   ← ÷1000
+ *   "2000 每月"        → { min:  2,  max:  2,  known: true }
  *   "面议" / "薪资面议" → { min:  0, max:  0, known: false }
  */
 // 日薪/时薪特征:带"元/天"、"/日"、"元/小时"等
 const DAILY_RATE = /元?\s*[/每]\s*(天|日)/;
 const HOURLY_RATE = /元?\s*[/每]\s*(时|小时)/;
+// 月薪(单位 元):"2000-4000元/月"、"2000元每月"、"2000 每月"
+const MONTHLY_YUAN_RATE = /(?:元\s*[/每]?\s*月|每月)/;
 
 /** 1 个自然月 = 22 工作日,每天 8 小时 */
 const WORK_DAYS_PER_MONTH = 22;
@@ -39,13 +44,14 @@ export function parseSalary(text: string | null | undefined): SalaryRange {
   //    "100-150元/天"   → (100..150) × 22 ÷ 1000  = 2.2K .. 3.3K
   //    "100元/小时"     → 100 × 8 × 22 ÷ 1000    = 17.6K
   //    "150-200元/天"   → 3.3K .. 4.4K            ← 之前被错当成 K/月,导致漏过滤
+  //    "N薪" 中的 N 不计入(否则 "100元/天·15薪" 会把 15 当成 0.33K)
   if (DAILY_RATE.test(normalized) || HOURLY_RATE.test(normalized)) {
     const isHourly = HOURLY_RATE.test(normalized);
     const monthlyFactor = isHourly
       ? (WORK_HOURS_PER_DAY * WORK_DAYS_PER_MONTH) / 1000
       : WORK_DAYS_PER_MONTH / 1000;
     const segments: number[] = [];
-    const regex = /(\d+(?:\.\d+)?)/g;
+    const regex = /(\d+(?:\.\d+)?)(?!\s*薪)/g;
     let match: RegExpExecArray | null;
     while ((match = regex.exec(normalized)) !== null) {
       const value = Number(match[1]);
@@ -59,15 +65,37 @@ export function parseSalary(text: string | null | undefined): SalaryRange {
     return { min, max, known: true };
   }
 
+  // ── 元/月(或"X 每月"):有单位的数字按单位(K/千/万),无单位按 元 处理再 ÷1000 转 K
+  //    "2000-4000元/月" → [2000, 4000] → ÷1000 → [2, 4]
+  //    "5K元/月"        → [5K]           → [5]       (已带单位)
+  //    "2000 每月"     → [2000]        → ÷1000 → [2]
+  if (MONTHLY_YUAN_RATE.test(normalized)) {
+    const segments: number[] = [];
+    const regex = /(\d+(?:\.\d+)?)\s*([Kk千万wW])?(?!\s*薪)/g;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(normalized)) !== null) {
+      const value = Number(match[1]);
+      const unit = match[2];
+      if (!Number.isFinite(value)) continue;
+      segments.push(unit ? unitToK(unit, value) : value / 1000);
+    }
+    if (segments.length === 0) return { min: 0, max: 0, known: false };
+    if (segments.length === 1) return { min: segments[0], max: segments[0], known: true };
+    // 只取前两个数字(后面的如"15薪"中的 15 已被正则排除)
+    const min = Math.min(segments[0], segments[1]);
+    const max = Math.max(segments[0], segments[1]);
+    return { min, max, known: true };
+  }
+
   // ── 月薪模式(K/千/万) —— 启发式:含"万/千"时无单位数字默认同单位
-  //    "10-15K·15薪" → [10K, 15K]
+  //    "10-15K·15薪" → [10K, 15K]   ("15薪" 中 15 被正则排除)
   //    "1-2万"       → [1万, 2万]
   //    "8千-1.2万"   → [8千, 1.2万] (混合:各自单位优先)
   //    "20K"         → [20K]
   const globalUnit = pickGlobalUnit(normalized);
 
   const segments: number[] = [];
-  const regex = /(\d+(?:\.\d+)?)\s*([Kk千万wW])?/g;
+  const regex = /(\d+(?:\.\d+)?)\s*([Kk千万wW])?(?!\s*薪)/g;
   let match: RegExpExecArray | null;
   while ((match = regex.exec(normalized)) !== null) {
     const value = Number(match[1]);
@@ -81,7 +109,7 @@ export function parseSalary(text: string | null | undefined): SalaryRange {
   if (segments.length === 0) return { min: 0, max: 0, known: false };
   if (segments.length === 1) return { min: segments[0], max: segments[0], known: true };
 
-  // 只取前两个数字作为 min/max,后面的(如"15薪"中的 15)忽略
+  // 只取前两个数字作为 min/max
   const min = Math.min(segments[0], segments[1]);
   const max = Math.max(segments[0], segments[1]);
   return { min, max, known: true };
