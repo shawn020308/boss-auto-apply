@@ -24,6 +24,10 @@ export function normalizeConfig(input: Partial<FilterConfig> | null | undefined)
   merged.longPauseMinSec = clampNumber(merged.longPauseMinSec, 1, 600, DEFAULT_CONFIG.longPauseMinSec);
   merged.longPauseMaxSec = clampNumber(merged.longPauseMaxSec, 1, 900, DEFAULT_CONFIG.longPauseMaxSec);
   merged.activeWithinDays = clampInt(merged.activeWithinDays, 0, 365, DEFAULT_CONFIG.activeWithinDays);
+  merged.scanDelayMinSec = clampNumber(merged.scanDelayMinSec, 0, 120, DEFAULT_CONFIG.scanDelayMinSec);
+  merged.scanDelayMaxSec = clampNumber(merged.scanDelayMaxSec, 0, 300, DEFAULT_CONFIG.scanDelayMaxSec);
+  merged.scanWarmupMinSec = clampNumber(merged.scanWarmupMinSec, 0, 10, DEFAULT_CONFIG.scanWarmupMinSec);
+  merged.scanWarmupMaxSec = clampNumber(merged.scanWarmupMaxSec, 0, 20, DEFAULT_CONFIG.scanWarmupMaxSec);
   merged.salaryMinK = clampInt(merged.salaryMinK, 0, 999, DEFAULT_CONFIG.salaryMinK);
   merged.salaryMaxK = clampInt(merged.salaryMaxK, 0, 999, DEFAULT_CONFIG.salaryMaxK);
   merged.cityExemptMinSalaryK = clampInt(merged.cityExemptMinSalaryK, 0, 999, DEFAULT_CONFIG.cityExemptMinSalaryK);
@@ -36,6 +40,13 @@ export function normalizeConfig(input: Partial<FilterConfig> | null | undefined)
   }
   if (merged.longPauseMaxSec < merged.longPauseMinSec) {
     merged.longPauseMaxSec = merged.longPauseMinSec;
+  }
+  // 扫岗节奏:max 不能小于 min;0 表示复用投递节奏,这时也不强制 fix
+  if (merged.scanDelayMaxSec > 0 && merged.scanDelayMaxSec < merged.scanDelayMinSec) {
+    merged.scanDelayMaxSec = merged.scanDelayMinSec;
+  }
+  if (merged.scanWarmupMaxSec < merged.scanWarmupMinSec) {
+    merged.scanWarmupMaxSec = merged.scanWarmupMinSec;
   }
   // 薪资区间无效时互换
   if (merged.salaryMaxK > 0 && merged.salaryMinK > merged.salaryMaxK) {

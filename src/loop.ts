@@ -52,6 +52,18 @@ export async function runApplyLoop(deps: LoopDeps): Promise<void> {
       }
 
       await handleOneJob(job, deps);
+
+      // 扫完一个职位后等一下(详情请求节奏),与投递节奏独立
+      //   - 需详情过滤的职位:详情是额外网络请求,等得稍久避免被风控
+      //   - 不需详情:纯本地 DOM 判定,只等个最小延时使节拍不那么机械
+      if (!state.stopping && state.applied < config.maxApplyCount) {
+        if (config.fetchDetail && (job.securityId || job.lid)) {
+          await sleepScanDelay(config);
+        } else {
+          // 不发详情接口,纯本地过滤,只需个微小抖动(人眼的节奏)
+          await sleep(randomBetween(0.3, 1.0) * 1000);
+        }
+      }
     }
 
     if (state.stopping) break;
@@ -71,7 +83,9 @@ export async function runApplyLoop(deps: LoopDeps): Promise<void> {
     }
 
     pageRound += 1;
-    await sleep(config.pageDelaySec * 1000);
+    // 翻页后等待 ±30% 随机抖动,避免每次都是固定节拍被识别
+    const jitter = 0.7 + Math.random() * 0.6; // [0.7, 1.3]
+    await sleep(config.pageDelaySec * jitter * 1000);
   }
 
   state.current = "已手动停止";
@@ -204,6 +218,13 @@ async function safeFetchJobDetail(
     deps.log("debug", `缺少详情字段,跳过详情请求:${formatJob(job)}`);
     return null;
   }
+  // ── 详情请求前先随机等一下(模拟人点进详情、看 JD 再返回) ──
+  //    上来就并发拉一堆详情会被风控认作脚本
+  const { state, config } = deps;
+  if (config.scanWarmupMaxSec > 0) {
+    await sleep(randomBetween(config.scanWarmupMinSec, config.scanWarmupMaxSec) * 1000);
+    if (state.stopping) return null;
+  }
   try {
     return await fetchJobDetail(job);
   } catch (error) {
@@ -212,6 +233,23 @@ async function safeFetchJobDetail(
       `获取详情失败,继续使用基础信息过滤【${formatJob(job)}】:${(error as Error).message || error}`,
     );
     return null;
+  }
+}
+
+/**
+ * 扫岗节奏(详情请求间隔 + 可选长尾暂停)。
+ * 跟投递节奏分开,避免扫岗过快被风控识别,
+ * 也避免扫描跟投递同节奏导致请求过于均匀。
+ *   config.scanDelayMinSec / scanDelayMaxSec == 0 → 复用投递那套
+ */
+async function sleepScanDelay(config: FilterConfig): Promise<void> {
+  const min = config.scanDelayMinSec > 0 ? config.scanDelayMinSec : config.delayMinSec;
+  const max = config.scanDelayMaxSec > 0 ? config.scanDelayMaxSec : config.delayMaxSec;
+  await sleep(randomBetween(min, max) * 1000);
+  if (config.longPauseChance > 0 && Math.random() < config.longPauseChance) {
+    await sleep(
+      randomBetween(config.longPauseMinSec, config.longPauseMaxSec) * 1000,
+    );
   }
 }
 

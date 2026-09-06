@@ -29,7 +29,7 @@ export interface FilterConfig {
   delayMinSec: number;
   /** 投递间隔随机上限(秒) */
   delayMaxSec: number;
-  /** 翻页/滚动后等待秒数 */
+  /** 翻页/滚动后等待秒数(会叠加 ±30% 抖动) */
   pageDelaySec: number;
   /** 长尾暂停概率(0~1),0 = 关闭 */
   longPauseChance: number;
@@ -37,6 +37,14 @@ export interface FilterConfig {
   longPauseMinSec: number;
   /** 长尾暂停上限(秒) */
   longPauseMaxSec: number;
+  /** 扫岗详情请求间隔下限(秒);0 = 与投递间隔保持一致 */
+  scanDelayMinSec: number;
+  /** 扫岗详情请求间隔上限(秒);0 = 与投递间隔保持一致 */
+  scanDelayMaxSec: number;
+  /** 扫岗详情请求前的预热延时下限(秒),模拟人思考后再点详情 */
+  scanWarmupMinSec: number;
+  /** 扫岗详情请求前的预热延时上限(秒) */
+  scanWarmupMaxSec: number;
   /** BOSS 活跃天数阈值(超过则跳过) */
   activeWithinDays: number;
   /** 岗位详情包含关键词(逗号/换行/分号分隔) */
@@ -73,6 +81,10 @@ export const DEFAULT_CONFIG: FilterConfig = {
   longPauseChance: 0.15,
   longPauseMinSec: 12,
   longPauseMaxSec: 25,
+  scanDelayMinSec: 0, // 0 = 复用 delayMin/Max
+  scanDelayMaxSec: 0, // 0 = 复用 delayMin/Max
+  scanWarmupMinSec: 0.5,
+  scanWarmupMaxSec: 2,
   activeWithinDays: 14,
   includeDescriptionKeywords: "",
   excludeDescriptionKeywords: "",

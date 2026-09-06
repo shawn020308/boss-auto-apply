@@ -127,10 +127,30 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
               ${num("delayMinSec", "投递间隔", "秒 (最小)", config.delayMinSec)}
               ${num("delayMaxSec", "投递间隔", "秒 (最大)", config.delayMaxSec)}
               ${num("pageDelaySec", "翻页等待", "秒", config.pageDelaySec)}
+              ${num("longPauseChance", "长尾暂停概率", "0-1", config.longPauseChance)}
+              ${num("longPauseMinSec", "长尾暂停", "秒 (最小)", config.longPauseMinSec)}
+              ${num("longPauseMaxSec", "长尾暂停", "秒 (最大)", config.longPauseMaxSec)}
             </div>
             <div class="aj-checks" style="margin-top:10px">
               ${chk("onlyOnlineBoss", "仅在线 BOSS", config.onlyOnlineBoss)}
               ${chk("debug", "调试日志", config.debug)}
+            </div>
+          </details>
+
+          <details class="aj-details" data-details="scan">
+            <summary>
+              <span>扫岗节奏 · 详情请求风控</span>
+              <span class="aj-summary-hint" data-bind="scan-hint">${describeScanRhythm(config)}</span>
+              <span class="aj-chevron">▸</span>
+            </summary>
+            <div style="font-size:11.5px;color:var(--aj-muted);margin-bottom:8px;line-height:1.5">
+              拉详情 / 翻页也是请求风控的来源。设置为 0 表示与投递间隔同步。
+            </div>
+            <div class="aj-numbers">
+              ${num("scanDelayMinSec", "详情间隔", "秒 (最小, 0=复用投递)", config.scanDelayMinSec)}
+              ${num("scanDelayMaxSec", "详情间隔", "秒 (最大, 0=复用投递)", config.scanDelayMaxSec)}
+              ${num("scanWarmupMinSec", "详情预热", "秒 (最小)", config.scanWarmupMinSec)}
+              ${num("scanWarmupMaxSec", "详情预热", "秒 (最大)", config.scanWarmupMaxSec)}
             </div>
           </details>
 
@@ -339,6 +359,8 @@ export function mountPanel(getModel: () => PanelModel, cb: PanelCallbacks): Pane
     if (kwHint) kwHint.textContent = describeKeywords(config);
     const cityHint = panel.querySelector<HTMLElement>('[data-bind="block-city-hint"]');
     if (cityHint) cityHint.textContent = describeBlockCities(config);
+    const scanHint = panel.querySelector<HTMLElement>('[data-bind="scan-hint"]');
+    if (scanHint) scanHint.textContent = describeScanRhythm(config);
   };
 
   panel.addEventListener("click", onFormChange);
@@ -394,6 +416,13 @@ function describeBlockCities(c: FilterConfig): string {
   if (exempt > 0) parts.push(`高薪 ≥${exempt}K 豁免`);
   if (parts.length === 0) return "不限";
   return parts.join(" · ");
+}
+
+function describeScanRhythm(c: FilterConfig): string {
+  const dmin = c.scanDelayMinSec > 0 ? c.scanDelayMinSec : c.delayMinSec;
+  const dmax = c.scanDelayMaxSec > 0 ? c.scanDelayMaxSec : c.delayMaxSec;
+  const source = c.scanDelayMinSec > 0 ? "独立" : "复用投递";
+  return `详情 ${dmin}~${dmax}s · 预热 ${c.scanWarmupMinSec}~${c.scanWarmupMaxSec}s · ${source}`;
 }
 
 function collectFormConfig(panel: HTMLElement): FilterConfig {
